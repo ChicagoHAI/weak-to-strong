@@ -46,6 +46,7 @@ def train_model(
     lr_schedule: str = "cosine_anneal",
     optimizer_name: str = "adam",
 ):
+    
     print("LR", lr, "batch_size", batch_size, "minibatch_size", minibatch_size)
     assert batch_size % minibatch_size == 0, "batch size must be divisible by minibatch size"
     # we purposefully turn off dropout, for determinism
@@ -108,6 +109,8 @@ def train_model(
                 mbatch = [next(it) for _ in range(minibatch_size)]
             except StopIteration:
                 break
+
+            # pad input_ids to common length (use 0 as padding token)
             input_ids = (
                 torch.nn.utils.rnn.pad_sequence([torch.tensor(ex["input_ids"]) for ex in mbatch])
                 .transpose(
@@ -116,6 +119,7 @@ def train_model(
                 )
                 .to(io_device)
             )
+
             labels = torch.tensor([ex["soft_label"] for ex in mbatch]).to(io_device)
 
             logits = model(input_ids)

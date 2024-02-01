@@ -85,6 +85,7 @@ def hf_loader(*hf_name, split_names=None):
 ##########
 
 
+
 def format_amazon_polarity(ex, rng):
     return dict(txt=f"{ex['title']} {ex['content']}", hard_label=ex["label"])
 
@@ -158,6 +159,36 @@ register_dataset(
     "boolq",
     DatasetConfig(
         loader=hf_loader("boolq", split_names=dict(test="validation")), formatter=format_boolq
+    ),
+)
+
+
+def format_income(ex, rng):
+    hard_label = int(ex["income"] == ">50K")
+    txt=""
+    for k in ex.keys():
+        txt+=f"{k}: {ex[k]}\n"
+    return dict(txt=txt, hard_label=hard_label)
+
+register_dataset(
+    "income",
+    DatasetConfig(
+        loader=hf_loader("scikit-learn/adult-census-income",split_names=dict(train="train[:66%]",test="train[-33%:]")), 
+        formatter=format_income
+    ),
+)
+
+def format_recidivism(ex, rng):
+    hard_label = int(ex["is_recid"] == 1)
+    txt=""
+    for k in ex.keys():
+        txt+=f"{k}: {ex[k]}\n"
+    return dict(txt=txt, hard_label=hard_label)
+
+register_dataset(
+    "recidivism",
+    DatasetConfig(
+        loader=hf_loader("imodels/compas-recidivism"), formatter=format_recidivism
     ),
 )
 

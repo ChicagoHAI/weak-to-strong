@@ -171,6 +171,7 @@ def main(
     eval_every: int = 1000000,
     sync_command: Optional[str] = None,
 ):
+    
     # this is per device!
     if minibatch_size_per_device is None:
         minibatch_size_per_device = 1
