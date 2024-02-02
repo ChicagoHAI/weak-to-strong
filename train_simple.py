@@ -107,16 +107,17 @@ MODEL_CONFIGS = [
         # Note that even then it will take up ~60GB per GPU on an 8-GPU machine.
         default_optimizer="adafactor",
     ),
-    # not tested yet
+    
     ModelConfig(
-        name="meta-llama/Llama-2-7b",
+        name="meta-llama/Llama-2-7b-chat-hf",
         default_lr=1e-5,
         eval_batch_size=2,
         gradient_checkpointing=True,
-        model_parallel=(
-            torch.cuda.get_device_properties(0).total_memory < 35e9
-            and torch.cuda.device_count() > 1
-        ),
+        model_parallel=True,
+        custom_kwargs={
+            "trust_remote_code": True,
+           "torch_dtype":torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float32,
+        },
     ),
 ]
 MODELS_DICT: Dict[str, ModelConfig] = {
