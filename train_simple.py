@@ -41,10 +41,7 @@ MODEL_CONFIGS = [
         # Should use model_parallel on V100s (note: ironically if you have a single V100 it should run,
         # but if you have multiple it won't run without model_parallel because of the overhead of data
         # parallel training).
-        model_parallel=(
-            torch.cuda.get_device_properties(0).total_memory < 35e9
-            and torch.cuda.device_count() > 1
-        ),
+        model_parallel=True
     ),
     ModelConfig(
         name="Qwen/Qwen-1_8B",

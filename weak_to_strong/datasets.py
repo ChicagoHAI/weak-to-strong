@@ -167,6 +167,8 @@ def format_income(ex, rng):
     hard_label = int(ex["income"] == ">50K")
     txt=""
     for k in ex.keys():
+        if k=='income':
+            continue
         txt+=f"{k}: {ex[k]}\n"
     return dict(txt=txt, hard_label=hard_label)
 
@@ -182,13 +184,33 @@ def format_recidivism(ex, rng):
     hard_label = int(ex["is_recid"] == 1)
     txt=""
     for k in ex.keys():
+        if k=='is_recid':
+            continue
         txt+=f"{k}: {ex[k]}\n"
     return dict(txt=txt, hard_label=hard_label)
 
 register_dataset(
     "recidivism",
     DatasetConfig(
-        loader=hf_loader("imodels/compas-recidivism"), formatter=format_recidivism
+        loader=hf_loader("imodels/compas-recidivism"), 
+        formatter=format_recidivism
+    ),
+)
+
+def format_balanced_income(ex, rng):
+    hard_label = int(ex["income"] == ">50K")
+    txt=""
+    for k in ex.keys():
+        if k=='income':
+            continue
+        txt+=f"{k}: {ex[k]}\n"
+    return dict(txt=txt, hard_label=hard_label)
+
+register_dataset(
+    "balanced_income",
+    DatasetConfig(
+        loader=hf_loader("Kangrui/balanced_scikit_adult_census_income"), 
+        formatter=format_balanced_income
     ),
 )
 
