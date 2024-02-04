@@ -19,6 +19,11 @@ from weak_to_strong.train import ModelConfig, train_and_save_model
 # NOTE learning rates are not particularly tuned, work somewhat reasonably at train batch size 32
 MODEL_CONFIGS = [
     ModelConfig(
+        name="openai-gpt",
+        default_lr=5e-5,
+        eval_batch_size=32,
+    ),
+    ModelConfig(
         name="gpt2",
         default_lr=5e-5,
         eval_batch_size=32,
