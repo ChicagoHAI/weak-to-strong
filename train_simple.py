@@ -23,6 +23,7 @@ MODEL_CONFIGS = [
         default_lr=5e-5,
         eval_batch_size=32,
     ),
+
     ModelConfig(
         name="gpt2",
         default_lr=5e-5,
@@ -285,6 +286,7 @@ def main(
     )
     # Tokenize datasets
     tokenizer = get_tokenizer(model_config.name)
+    max_ctx=min(max_ctx, tokenizer.model_max_length) # make sure we don't exceed the model's max length
     train1_ds = tokenize_dataset(train1_ds, tokenizer, max_ctx)
     test_ds = tokenize_dataset(test_ds, tokenizer, max_ctx)
     if train2_ds:

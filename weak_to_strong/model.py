@@ -61,4 +61,5 @@ class TransformerWithHead(PreTrainedModel):
         if self.linear_probe:
             hidden_states = hidden_states.detach()
         logits = self.score(hidden_states)
+
         return logits
