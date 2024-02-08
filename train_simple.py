@@ -38,6 +38,7 @@ MODEL_CONFIGS = [
         name="gpt2-large",
         default_lr=1e-5,
         eval_batch_size=32,
+        model_parallel=True
     ),
     ModelConfig(
         name="gpt2-xl",
@@ -272,7 +273,13 @@ def main(
         train1_ds = load_from_disk(weak_labels_path)
         train2_ds = None
 
-        weak_model_config = json.load(open(weak_labels_path.replace("weak_labels", "config.json")))
+        weak_model_config_path=weak_labels_path.replace("weak_labels", "training_config.json")
+        # test if path exists
+        if os.path.exists(weak_model_config_path):
+            weak_model_config = json.load(open(weak_model_config_path))
+        else:
+            weak_model_config = json.load(open(weak_labels_path.replace("weak_labels", "config.json")))
+
         config["weak_model_size"] = weak_model_config["model_size"]
         config_name = get_config_foldername(config)
         config["weak_model"] = weak_model_config
@@ -321,7 +328,7 @@ def main(
     res_dict = {"accuracy": acc}
     print("accuracy:", acc)
 
-    with open(os.path.join(save_path, f"config.json"), "w") as f:
+    with open(os.path.join(save_path, f"training_config.json"), "w") as f:
         json.dump(config, f, indent=2)
 
     with open(os.path.join(save_path, f"results_summary.json"), "w") as f:

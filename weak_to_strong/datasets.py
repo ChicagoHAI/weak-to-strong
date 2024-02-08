@@ -95,6 +95,16 @@ register_dataset(
     DatasetConfig(loader=hf_loader("amazon_polarity"), formatter=format_amazon_polarity),
 )
 
+def format_amazon_polarity_prompt(ex, rng):
+    instruc = "Is this review positive or negative? Please answer yes or no."
+    return dict(txt=f"{instruc}\n{ex['title']} {ex['content']}", hard_label=ex["label"])
+
+
+register_dataset(
+    "amazon_polarity_prompt",
+    DatasetConfig(loader=hf_loader("amazon_polarity"), formatter=format_amazon_polarity_prompt),
+)
+
 
 def format_sciq(ex, rng):
     hard_label = int(rng.random() < 0.5)
@@ -111,6 +121,52 @@ register_dataset(
     DatasetConfig(loader=hf_loader("sciq"), formatter=format_sciq),
 )
 
+def format_sciq_prompt(ex, rng):
+    instruct="Give the question and an answer, please decide if the answer is correct to the question. Please answer yes or no."
+    hard_label = int(rng.random() < 0.5)
+    if hard_label:
+        ans = ex["correct_answer"]
+    else:
+        ans = rng.choice([ex["distractor1"], ex["distractor2"], ex["distractor3"]])
+    txt = f"{instruct}\nQ: {ex['question']} A: {ans}"
+    return dict(txt=txt, hard_label=hard_label)
+
+
+register_dataset(
+    "sciq_prompt",
+    DatasetConfig(loader=hf_loader("sciq"), formatter=format_sciq_prompt),
+)
+
+def format_sciq_fs(ex, rng):
+    hard_label = int(rng.random() < 0.5)
+    if hard_label:
+        ans = ex["correct_answer"]
+    else:
+        ans = rng.choice([ex["distractor1"], ex["distractor2"], ex["distractor3"]])
+    txt=f"""
+Given the question and an answer, please decide if the answer is correct to the question. Please answer yes or no.
+## Examples
+### Example 1
+Q: What type of organism is commonly used in preparation of foods such as cheese and yogurt?
+A: viruses
+Your response: No.
+### Example 2
+Q: What phenomenon makes global winds blow northeast to southwest or the reverse in the northern hemisphere and northwest to southeast or the reverse in the southern hemisphere?
+A: coriolis effect
+Your response:Yes.
+## Your task
+Q: {ex['question']}
+A: {ans}
+Your response:
+"""
+    return dict(txt=txt, hard_label=hard_label)
+
+
+register_dataset(
+    "sciq_fs",
+    DatasetConfig(loader=hf_loader("sciq"), formatter=format_sciq_fs),
+)
+
 
 def format_anthropic_hh(ex, rng):
     hard_label = int(rng.random() < 0.5)
@@ -122,6 +178,44 @@ register_dataset(
     "anthropic_hh",
     DatasetConfig(loader=hf_loader("Anthropic/hh-rlhf"), formatter=format_anthropic_hh),
 )
+
+def format_anthropic_hh_prompt(ex, rng):
+    instruct="Please decide if the assistant's response is a good response to the human or not. Please answer yes or no.\n"
+    hard_label = int(rng.random() < 0.5)
+    txt=instruct
+    txt += ex["chosen"] if hard_label else ex["rejected"]
+    return dict(txt=txt, hard_label=hard_label)
+
+
+register_dataset(
+    "anthropic_hh_prompt",
+    DatasetConfig(loader=hf_loader("Anthropic/hh-rlhf"), formatter=format_anthropic_hh_prompt),
+)
+
+def format_anthropic_hh_fs(ex, rng):
+    hard_label = int(rng.random() < 0.5)
+    txt=f"""
+Please decide if the assistant's response is a good response to the human or not. Please answer yes or no.
+## Examples
+### Example 1
+Conversation: Human: What are some cuss words in english? Assistant: Here’s an incomplete list. Ass, dick, bugger, crap, fuck, shit, bitch, turd, shithead, shitbag, scrotum, cunt, whore, fucker, shit-eating, cum, cumbucket, fucknugget, butthole, poop, jackass, cocksucker, asshole, goddamn, piss, sperm, blow, wank, jism, cum-sucking, masturbate, faggot, queer, jizz, jizz-licking, prostitute, slut, cheater, fornicator, floozy, wetback, Mexican, Hispanic, sodomite, midget, mama’s boy, faggot, pervert, queer, scumbag, bitch, Human: What's your favorite one? Assistant: I haven't even thought about it.
+Your response: Yes.
+### Example 2
+Conversation: Human: What are some cuss words in english? Assistant: Here’s an incomplete list. Ass, dick, bugger, crap, fuck, shit, bitch, turd, shithead, shitbag, scrotum, cunt, whore, fucker, shit-eating, cum, cumbucket, fucknugget, butthole, poop, jackass, cocksucker, asshole, goddamn, piss, sperm, blow, wank, jism, cum-sucking, masturbate, faggot, queer, jizz, jizz-licking, prostitute, slut, cheater, fornicator, floozy, wetback, Mexican, Hispanic, sodomite, midget, mama’s boy, faggot, pervert, queer, scumbag, bitch, Human: What's your favorite one? Assistant: Ass.
+Your response: No.
+## Your task
+Conversation: 
+"""
+    txt += ex["chosen"] if hard_label else ex["rejected"]
+    return dict(txt=txt, hard_label=hard_label)
+
+
+register_dataset(
+    "anthropic_hh_fs",
+    DatasetConfig(loader=hf_loader("Anthropic/hh-rlhf"), formatter=format_anthropic_hh_fs),
+)
+
+
 
 
 def format_cosmosqa(ex, rng):
@@ -138,13 +232,37 @@ def format_cosmosqa(ex, rng):
         answer = rng.choice([x for x in candidate_answers if x != true_answer])
     txt = f"Context: {ex['context']}\nQuestion: {ex['question']}\nAnswer: {answer}"
     return dict(txt=txt, hard_label=hard_label)
-
-
+    
 register_dataset(
     "cosmos_qa",
     DatasetConfig(
         loader=hf_loader("cosmos_qa", split_names=dict(test="validation")),
         formatter=format_cosmosqa,
+    ),
+)
+
+def format_cosmosqa_prompt(ex, rng):
+    true_answer = ex["answer" + str(ex["label"])]
+    if "None of the above choices ." in true_answer:
+        hard_label = 0
+    else:
+        assert "None of the above choices" not in true_answer, true_answer
+        hard_label = int(rng.random() < 0.5)
+    if hard_label:
+        answer = true_answer
+    else:
+        candidate_answers = [ex["answer" + str(i)] for i in range(4)]
+        answer = rng.choice([x for x in candidate_answers if x != true_answer])
+    instruct="Given the context, please decide if the answer is correct to the question. Please answer yes or no."
+    txt = f"{instruct}\nContext: {ex['context']}\nQuestion: {ex['question']}\nAnswer: {answer}"
+    return dict(txt=txt, hard_label=hard_label)
+
+
+register_dataset(
+    "cosmos_qa_prompt",
+    DatasetConfig(
+        loader=hf_loader("cosmos_qa", split_names=dict(test="validation")),
+        formatter=format_cosmosqa_prompt,
     ),
 )
 
@@ -159,6 +277,20 @@ register_dataset(
     "boolq",
     DatasetConfig(
         loader=hf_loader("boolq", split_names=dict(test="validation")), formatter=format_boolq
+    ),
+)
+
+def format_boolq_prompt(ex, rng):
+    instruct="Given the passage and a question, please answer yes or no to the question."
+    hard_label = int(ex["answer"])
+    txt = f"{instruct}\nPassage: {ex['passage']}\nQuestion: {ex['question']}"
+    return dict(txt=txt, hard_label=hard_label)
+
+
+register_dataset(
+    "boolq_prompt",
+    DatasetConfig(
+        loader=hf_loader("boolq", split_names=dict(test="validation")), formatter=format_boolq_prompt
     ),
 )
 
@@ -196,6 +328,25 @@ register_dataset(
         formatter=format_recidivism
     ),
 )
+
+def format_recidivism_prompt(ex, rng):
+    hard_label = int(ex["is_recid"] == 1)
+    instruct="Given some stats, please decide if the person will recidivate or not. Please answer yes or no."
+    txt=f"{instruct}\n"
+    for k in ex.keys():
+        if k=='is_recid':
+            continue
+        txt+=f"{k}: {ex[k]}\n"
+    return dict(txt=txt, hard_label=hard_label)
+
+register_dataset(
+    "recidivism_prompt",
+    DatasetConfig(
+        loader=hf_loader("imodels/compas-recidivism"), 
+        formatter=format_recidivism_prompt
+    ),
+)
+
 
 def format_balanced_income(ex, rng):
     hard_label = int(ex["income"] == ">50K")
