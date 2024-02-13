@@ -6,11 +6,25 @@ from datasets import load_from_disk,Dataset
 import fire
 import shutil
 
+
 def convert_to_false_only(dataset):
     update=[]
     for dp in dataset:
         if not dp['acc']:
             update.append(dp)
+    dataset = Dataset.from_list(update)
+    return dataset
+
+def convert_to_false_only_flipped(dataset):
+    update=[]
+    for dp in dataset:
+        if dp['acc']:
+            continue
+        else:
+            ndp=dp.copy()
+            ndp['soft_label']=[dp['soft_label'][1], dp['soft_label'][0]]
+            ndp['hard_label']=1-ndp['gt_label']
+            update.append(ndp)
     dataset = Dataset.from_list(update)
     return dataset
 
@@ -61,8 +75,10 @@ def convert_to_all_false(dataset):
     dataset = Dataset.from_list(update)
     return dataset
 
+
 Func={
     "convert_to_false_only":convert_to_false_only,
+    "convert_to_false_only_flipped":convert_to_false_only_flipped,
     "convert_to_true_only":convert_to_true_only,
     "convert_to_true_gt":convert_to_true_gt,
     "convert_to_all_false":convert_to_all_false,
@@ -73,6 +89,9 @@ def main(
         save_path,
         mode,
 ):
+    print(f"result_path: {result_path}")
+    print(f"save_path: {save_path}")
+    print(f"mode: {mode}")
     for result_filename in glob.glob(os.path.join(result_path,"**/dataset_info.json"), recursive=True):
         dataset_name="/".join(result_filename.split("/")[:-1])
         datas=load_from_disk(dataset_name)

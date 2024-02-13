@@ -197,7 +197,12 @@ def train_and_save_model(
 
     gradient_checkpointing = model_config.gradient_checkpointing
     custom_kwargs = model_config.custom_kwargs or {}
-
+    print(save_path)
+    if os.path.exists(os.path.join(save_path, "results.pkl")) and not force_retrain:
+        results=pickle.load(open(os.path.join(save_path, "results.pkl"), "rb")) 
+        print("already tested, return directly")
+        return results["test_results"], None
+    
     def maybe_load_model(model):
         if os.path.exists(os.path.join(save_path, "results.pkl")) and not force_retrain:
             print("loading from", save_path)
