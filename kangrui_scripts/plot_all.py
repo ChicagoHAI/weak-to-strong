@@ -119,7 +119,7 @@ def plot_file(rst_path,
         plt.savefig(f"{rst_path}/{ds_name}_{plot_type}.png",bbox_inches='tight')
         print(f"{rst_path}/{ds_name}_{plot_type}.png finished")
         
-def main(rst_dir="../results/", 
+def main(rst_dir="./results/", 
          plot_types=["accuracy"]):
     # find all directories in rst_dir
 
