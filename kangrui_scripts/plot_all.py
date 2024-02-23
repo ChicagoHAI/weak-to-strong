@@ -120,7 +120,8 @@ def plot_file(rst_path,
         print(f"{rst_path}/{ds_name}_{plot_type}.png finished")
         
 def main(rst_dir="./results/", 
-         plot_types=["accuracy"]):
+         plot_types=["accuracy"],
+         specified_folder=None,):
     # find all directories in rst_dir
 
     processes = []
@@ -130,6 +131,8 @@ def main(rst_dir="./results/",
             if os.path.isdir(os.path.join(rst_dir, d)):
                 # run multiprocessing
                 rst_path=os.path.join(rst_dir, d)
+                if specified_folder and rst_path != specified_folder:
+                    continue
                 process = multiprocessing.Process(target=plot_file, args=(rst_path, plot_type))
                 processes.append(process)
                 process.start()
