@@ -64,7 +64,7 @@ def plot_dir(rst_path,
         print(f"{rst_path}/{model_name}_distribution.png finished")
         
 def main(rst_dir="./results/", 
-         sub_folders=["boolq","cosmos_qa","recidivism","sciq"],):
+         sub_folders=["boolq","cosmos_qa","recidivism","sciq","boolq_only_topk","cosmos_qa_only_topk","recidivism_only_topk","sciq_only_topk"],):
     # find all directories in rst_dir
 
     processes = []

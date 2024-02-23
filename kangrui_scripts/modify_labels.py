@@ -75,6 +75,22 @@ def convert_to_all_false(dataset):
     dataset = Dataset.from_list(update)
     return dataset
 
+def convert_to_only_topk(dataset,top_ratio=0.25,filter_value=0.85):
+    update=[]
+
+    max_list=np.array([max(dp['soft_label']) for dp in dataset])
+   
+    # get filter value for top_ratio (decending order)
+    filter_value = min(np.sort(max_list)[::-1][int(len(max_list)*top_ratio)],filter_value)
+
+    for dp in dataset:
+        if max(dp['soft_label'])<filter_value:
+            continue
+        else:
+            update.append(dp)
+    dataset = Dataset.from_list(update)
+    return dataset
+
 
 Func={
     "convert_to_false_only":convert_to_false_only,
@@ -82,7 +98,9 @@ Func={
     "convert_to_true_only":convert_to_true_only,
     "convert_to_true_gt":convert_to_true_gt,
     "convert_to_all_false":convert_to_all_false,
-    "convert_to_false_gt":convert_to_false_gt
+    "convert_to_false_gt":convert_to_false_gt,
+    "convert_to_only_topk":convert_to_only_topk,
+    "convert_to_og":lambda x:x
 }
 def main(
         result_path,
